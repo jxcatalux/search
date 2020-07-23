@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,6 +21,16 @@ namespace UNameEmailChooser
     {
         static string userName = "";
         static string processLog = "";
+        static string logFile = "C:\\SCI\\Logs\\";
+
+        public static void Log(string logMessage, TextWriter w)
+        {
+            w.Write("\r\nLog Entry : ");
+            w.WriteLine($"{DateTime.Now.ToLongTimeString()} {DateTime.Now.ToLongDateString()}");
+            w.WriteLine("  :");
+            w.WriteLine($"  :{logMessage}");
+            w.WriteLine("-------------------------------");
+        }
 
         public static bool ADUserExists(string userName, string domainName)
         {
@@ -97,6 +107,22 @@ namespace UNameEmailChooser
         {
             try
             {
+                if (!Directory.Exists(logFile))
+                {
+                    logFile = "C:\\";
+                }
+
+                logFile += "UNameEmailChooserLog_" + DateTime.Today.Year.ToString() + string.Format("{0,2:D2}", DateTime.Today.Month) + string.Format("{0,2:D2}", DateTime.Today.Day) + ".txt";
+
+                string logInfo = "First Name -- " + firstName + "\r\nLast Name -- " + lastName + "\r\nDomain  -- " + domainName + "\r\nEndPoint -- " + endPoint + "\r\nwssPasswordType -- " + wssPasswordType;
+                logInfo += "webMethodUname -- " + webMethodUname + "\r\nwebMethodPassword -- " + webMethodPassword + "\r\nsoapActionGet  -- " + soapActionGet + "\r\nsapNamespaceUrl -- " + sapNamespaceUrl;
+                //debug
+                using (StreamWriter w = File.AppendText(logFile))
+                {
+                    Log(logInfo, w);
+
+                }
+               
                 using (HostingEnvironment.Impersonate())
                 {
                     char[] firstNameArr = firstName.ToCharArray();
@@ -146,6 +172,13 @@ namespace UNameEmailChooser
                         {
                             processLog += "Could not choose a user account for firstname <strong>" + firstName + "</strong> and lastname <strong>" + lastName + "</strong><br>";
                             processLog += "Will skip this user.<br>";
+
+                            using (StreamWriter w = File.AppendText(logFile))
+                            {
+                                Log(processLog, w);
+
+                            }
+
                             return "FAILED";
                         }
                     }
@@ -153,8 +186,16 @@ namespace UNameEmailChooser
             }
             catch (Exception ex)
             {
+                using (StreamWriter w = File.AppendText(logFile))
+                {
+                    Log("FAILED: Stacktrace = " + ex.ToString(), w);
+
+                }
                 return "FAILED: Stacktrace = " + ex.ToString();
+                
             }
+
+
         }
     }
 
